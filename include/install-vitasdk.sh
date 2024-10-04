@@ -1,7 +1,21 @@
 #!/bin/bash
 
 get_download_link () {
-  wget -qO- https://github.com/vitasdk/vita-headers/raw/master/.travis.d/last_built_toolchain.py | python3 - $@
+  case "$(uname -s)" in
+    Darwin*)
+      SUPPORTED=11
+      OSVERSION=$(sw_vers -productVersion)
+      if [ ${OSVERSION:0:2} -lt $SUPPORTED ]; then
+          wget -qO- https://github.com/vitasdk/vita-headers/raw/master/.travis.d/last_built_toolchain.py --no-check-certificate | $(which python||which python3) - $@
+      else
+        wget -qO- https://github.com/vitasdk/vita-headers/raw/master/.travis.d/last_built_toolchain.py | python3 - $@
+      fi
+    ;;
+
+    *)
+      wget -qO- https://github.com/vitasdk/vita-headers/raw/master/.travis.d/last_built_toolchain.py | python3 - $@
+    ;;
+  esac
 }
 
 install_vitasdk () {
@@ -10,7 +24,11 @@ install_vitasdk () {
   case "$(uname -s)" in
      Darwin*)
       mkdir -p $INSTALLDIR
-      wget -O- "$(get_download_link master osx)" | tar xj -C $INSTALLDIR --strip-components=1
+      if [ ${OSVERSION:0:2} -lt $SUPPORTED ]; then
+          wget -O- "$(get_download_link master osx)" --no-check-certificate | tar xj -C $INSTALLDIR --strip-components=1
+      else
+        wget -O- "$(get_download_link master osx)" | tar xj -C $INSTALLDIR --strip-components=1
+      fi
      ;;
 
      Linux*)
@@ -39,7 +57,7 @@ install_vitasdk () {
      *)
        echo "Unknown OS"
        exit 1
-      ;;
+     ;;
   esac
 
 }
