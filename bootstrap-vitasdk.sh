@@ -1,6 +1,27 @@
 #!/bin/bash
 set -e
 
+case "$(uname -s)" in
+  Darwin*)
+    SUPPORTED=11
+    OSVERSION=$(sw_vers -productVersion)
+    if [ ${OSVERSION:0:2} -lt $SUPPORTED ]; then
+      echo "You are running an older Mac OS version, you will need to connect to github insecurely. A bad actor will be able to pretend to be github and serve you malware. Do you wish to continue? (y/n)"
+      read -r RESPONSE
+      if [[ $RESPONSE =~ ^[Yy]$ ]]; then
+        echo "Continue insecurely..."
+      else
+        echo "Aborting..."
+        exit 0
+      fi
+    fi
+  ;;
+
+  *)
+    echo "Continue..."
+  ;;
+esac
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 INSTALLDIR="${VITASDK:-/usr/local/vitasdk}"
